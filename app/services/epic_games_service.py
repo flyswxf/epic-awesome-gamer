@@ -312,8 +312,10 @@ class EpicGames:
                 logger.success(f"Already in the library - {url=}")
                 continue
 
-            # 3. 定位核心按钮
-            purchase_btn = page.locator("//aside//button[@data-testid='purchase-cta-button']")
+            # 3. 定位核心按钮 (已修复：移除 //aside 限制)
+            # 🟢 修复：Bundle 页面购买按钮不一定在 aside 里，改为全页面寻找
+            purchase_btn = page.locator("//button[@data-testid='purchase-cta-button']")
+            
             try:
                 purchase_status = await purchase_btn.text_content(timeout=5000)
             except TimeoutError:
