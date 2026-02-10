@@ -66,7 +66,7 @@
 | 变量名 | 默认值 | 说明 |
 | :--- | :--- | :--- |
 | `GEMINI_BASE_URL` | `https://aihubmix.com` | 如果使用官方接口，请填 `https://generativelanguage.googleapis.com` |
-| `GEMINI_MODEL` | `gemini-2.5-pro` | 推荐使用 2.5 Pro 或 1.5 Pro，视觉识别能力更强 |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | 推荐使用 2.5 Flash 以避免免费版 API 的 429 限制，或升级到 2.5 Pro |
 
 ### 4. 启动工作流
 1. 点击仓库上方的 **Actions** 标签页。

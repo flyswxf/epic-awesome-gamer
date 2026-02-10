@@ -36,9 +36,14 @@ class EpicSettings(AgentConfig):
     )
     
     GEMINI_MODEL: str = Field(
-        default=os.getenv("GEMINI_MODEL", "gemini-2.5-pro"),
+        default=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
         description="模型名称",
     )
+
+    # [模型微调] 针对免费版 API 的优化默认值 (避免 429 错误)
+    IMAGE_CLASSIFIER_MODEL: str = Field(default=os.getenv("IMAGE_CLASSIFIER_MODEL", "gemini-2.5-flash"))
+    SPATIAL_POINT_REASONER_MODEL: str = Field(default=os.getenv("SPATIAL_POINT_REASONER_MODEL", "gemini-2.5-flash"))
+    SPATIAL_PATH_REASONER_MODEL: str = Field(default=os.getenv("SPATIAL_PATH_REASONER_MODEL", "gemini-2.5-flash"))
 
     EPIC_EMAIL: str = Field(default_factory=lambda: os.getenv("EPIC_EMAIL"))
     EPIC_PASSWORD: SecretStr = Field(default_factory=lambda: os.getenv("EPIC_PASSWORD"))
