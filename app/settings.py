@@ -40,11 +40,6 @@ class EpicSettings(AgentConfig):
         description="模型名称",
     )
 
-    # [模型微调] 针对免费版 API 的优化默认值 (避免 429 错误)
-    IMAGE_CLASSIFIER_MODEL: str = Field(default=os.getenv("IMAGE_CLASSIFIER_MODEL", "gemini-2.5-flash"))
-    SPATIAL_POINT_REASONER_MODEL: str = Field(default=os.getenv("SPATIAL_POINT_REASONER_MODEL", "gemini-2.5-flash"))
-    SPATIAL_PATH_REASONER_MODEL: str = Field(default=os.getenv("SPATIAL_PATH_REASONER_MODEL", "gemini-2.5-flash"))
-
     EPIC_EMAIL: str = Field(default_factory=lambda: os.getenv("EPIC_EMAIL"))
     EPIC_PASSWORD: SecretStr = Field(default_factory=lambda: os.getenv("EPIC_PASSWORD"))
     DISABLE_BEZIER_TRAJECTORY: bool = Field(default=True)
@@ -127,6 +122,16 @@ def _apply_aihubmix_patch():
                 return types.File(name=file_id, uri=file_id, mime_type="image/png")
 
             orig_generate = genai.models.AsyncModels.generate_content
+            
+            # 定义回退模型列表 (优先级: Flash -> Flash 2.0 -> Pro 2.5)
+            # 用户指定的模型最优先，如果失败，尝试以下模型
+            FALLBACK_MODELS = [
+                "gemini-2.5-flash",
+                "gemini-2.0-flash",
+                "gemini-1.5-flash",
+                "gemini-2.5-pro",
+            ]
+
             async def patched_generate(self_models, model, contents, **kwargs):
                 normalized = _local_to_list(contents)
                 
@@ -138,10 +143,32 @@ def _apply_aihubmix_patch():
                                 data = file_cache[part.file_data.file_uri]
                                 content.parts[i] = types.Part.from_bytes(data=data, mime_type="image/png")
                 
-                # [核心修复点] 强制使用关键字参数 model= 和 contents=
-                # 这解决了 "takes 1 positional argument but 3 were given" 的报错
-                return await orig_generate(self_models, model=model, contents=normalized, **kwargs)
+                # 构建尝试列表：[当前模型] + [回退模型列表]
+                attempt_models = [model] + [m for m in FALLBACK_MODELS if m != model]
+                
+                # 记录上次的异常
+                last_exception = None
 
+                for current_model in attempt_models:
+                    try:
+                        # [核心修复点] 强制使用关键字参数 model= 和 contents=
+                        return await orig_generate(self_models, model=current_model, contents=normalized, **kwargs)
+                    except Exception as e:
+                        # 检查是否为 Rate Limit (429) 或其他可能需要重试的错误
+                        error_msg = str(e).lower()
+                        if "429" in error_msg or "resource_exhausted" in error_msg:
+                            logger.warning(f"⚠️ 模型 {current_model} 触发流控 (429)，尝试切换下一个模型...")
+                            last_exception = e
+                            continue
+                        else:
+                            # 其他错误直接抛出
+                            raise e
+                
+                # 如果所有模型都失败，抛出最后一个异常
+                if last_exception:
+                    logger.error(f"❌ 所有模型尝试均失败，最后的错误: {last_exception}")
+                    raise last_exception
+                
             genai.files.AsyncFiles.upload = patched_upload
             genai.models.AsyncModels.generate_content = patched_generate
             logger.info("🚀 Base64 文件绕过补丁加载成功 (参数兼容版)")
