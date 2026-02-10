@@ -198,11 +198,11 @@ jobs:
 
 在仓库设置中添加以下敏感信息：
 
-| Secret 名称 | 说明 |
-|------------|------|
-| `EPIC_EMAIL` | 您的 Epic Games 账号邮箱<br>⚠️ 需要关闭二步验证 |
-| `EPIC_PASSWORD` | 您的 Epic Games 账号密码<br>⚠️ 需要关闭二步验证 |
-| `GEMINI_API_KEY` | Google Gemini API 密钥<br>从步骤3获取 |
+| Secret 名称      | 说明                                           |
+| ---------------- | ---------------------------------------------- |
+| `EPIC_EMAIL`     | 您的 Epic Games 账号邮箱<br>⚠️ 需要关闭二步验证 |
+| `EPIC_PASSWORD`  | 您的 Epic Games 账号密码<br>⚠️ 需要关闭二步验证 |
+| `GEMINI_API_KEY` | Google Gemini API 密钥<br>从步骤3获取          |
 
 **详细添加步骤**：
 1. 在您的仓库页面，点击顶部的 "Settings" 标签
