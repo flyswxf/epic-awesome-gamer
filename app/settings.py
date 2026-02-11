@@ -127,9 +127,8 @@ def _apply_aihubmix_patch():
             # 用户指定的模型最优先，如果失败，尝试以下模型
             FALLBACK_MODELS = [
                 "gemini-2.5-flash",
-                "gemini-2.0-flash",
-                "gemini-1.5-flash",
-                "gemini-2.5-pro",
+                "gemini-2.5-flash-lite",
+                "gemini-3-flash-preview",
             ]
 
             async def patched_generate(self_models, model, contents, **kwargs):
